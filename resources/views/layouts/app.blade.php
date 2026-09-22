@@ -84,18 +84,51 @@
         // into a chip. This runs as a plain (non-deferred) script, so it
         // registers on window before Alpine's deferred script boots and
         // starts evaluating x-data="tagInput(...)" attributes.
-        window.tagInput = function (initialTags) {
+        //
+        // Second argument is the list of the user's existing tag names;
+        // "suggestions" filters that list against the current draft text
+        // for the autocomplete dropdown, and arrow keys move a highlight
+        // through it.
+        window.tagInput = function (initialTags, existingTagNames) {
             return {
                 tags: Array.isArray(initialTags) ? initialTags.slice() : [],
+                availableTags: Array.isArray(existingTagNames) ? existingTagNames.slice() : [],
                 draft: '',
-                addTag() {
-                    const name = this.draft.trim().replace(/,+$/, '').trim();
+                highlightedIndex: -1,
+                get suggestions() {
+                    const q = this.draft.trim().toLowerCase();
+                    if (q === '') return [];
+                    const already = this.tags.map(t => t.toLowerCase());
+                    return this.availableTags
+                        .filter(name => name.toLowerCase().includes(q))
+                        .filter(name => !already.includes(name.toLowerCase()))
+                        .slice(0, 6);
+                },
+                addTag(name) {
+                    const value = (name ?? this.draft).trim().replace(/,+$/, '').trim();
                     this.draft = '';
-                    if (name === '') return;
-                    const lower = name.toLowerCase();
+                    this.highlightedIndex = -1;
+                    if (value === '') return;
+                    const lower = value.toLowerCase();
                     if (!this.tags.some(t => t.toLowerCase() === lower)) {
-                        this.tags.push(name);
+                        this.tags.push(value);
                     }
+                },
+                selectHighlighted() {
+                    const options = this.suggestions;
+                    if (this.highlightedIndex >= 0 && options[this.highlightedIndex]) {
+                        this.addTag(options[this.highlightedIndex]);
+                    } else {
+                        this.addTag();
+                    }
+                },
+                moveHighlight(delta) {
+                    const count = this.suggestions.length;
+                    if (count === 0) {
+                        this.highlightedIndex = -1;
+                        return;
+                    }
+                    this.highlightedIndex = (this.highlightedIndex + delta + count) % count;
                 },
                 removeTag(index) {
                     this.tags.splice(index, 1);

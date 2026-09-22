@@ -18,8 +18,13 @@ class BookmarkController extends Controller
             ->inRandomOrder()
             ->get();
 
+        $availableTags = $request->user()->tags()
+            ->orderBy('name')
+            ->pluck('name');
+
         return view('bookmarks.index', [
             'bookmarks' => $bookmarks,
+            'availableTags' => $availableTags,
         ]);
     }
 

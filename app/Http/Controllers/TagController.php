@@ -29,9 +29,14 @@ class TagController extends Controller
             ->orderBy('name')
             ->get();
 
+        $availableTags = $request->user()->tags()
+            ->orderBy('name')
+            ->pluck('name');
+
         return view('tags.show', [
             'tag' => $tag,
             'bookmarks' => $bookmarks,
+            'availableTags' => $availableTags,
         ]);
     }
 }
