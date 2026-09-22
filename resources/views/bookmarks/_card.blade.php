@@ -1,6 +1,8 @@
 <div
     x-data="{ editing: false, copied: false }"
     data-bookmark-card
+    data-search="{{ Str::lower(($bookmark->name ?: '').' '.$bookmark->displayUrl()) }}"
+    x-show="search.trim() === '' || $el.dataset.search.includes(search.trim().toLowerCase())"
     tabindex="0"
     @click="if (!editing) window.location.href = '{{ $bookmark->url }}'"
     @keydown.enter="if (!editing) window.location.href = '{{ $bookmark->url }}'"

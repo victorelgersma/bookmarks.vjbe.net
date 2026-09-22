@@ -28,7 +28,7 @@
 
         <footer class="px-6 py-4 text-center text-xs text-gray-400 dark:text-gray-600 border-t border-gray-200 dark:border-gray-800">
             <a
-                href="https://github.com/YOUR-USERNAME/YOUR-REPO"
+                href="https://github.com/bookmarks.vjbe.net"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-1.5 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"

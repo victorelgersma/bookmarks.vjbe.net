@@ -1,7 +1,15 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto px-6 py-10" x-data="{ formOpen: false }">
+<div class="max-w-5xl mx-auto px-6 py-10" x-data="{
+    formOpen: false,
+    search: '',
+    bookmarks: @js($bookmarks->map(fn ($b) => ['id' => $b->id, 'text' => Str::lower(($b->name ?: '').' '.$b->displayUrl())])),
+    get visibleCount() {
+        const q = this.search.trim().toLowerCase();
+        return this.bookmarks.filter(b => q === '' || b.text.includes(q)).length;
+    }
+}">
 
     @if (session('status') === 'bookmark-saved')
         <div class="mb-4 text-sm text-green-600 dark:text-green-400">Saved.</div>
@@ -11,21 +19,21 @@
         <div class="mb-4 text-sm text-green-600 dark:text-green-400">Deleted.</div>
     @endif
 
-    {{-- Big, central search — the first thing you see --}}
-    <form method="GET" action="{{ route('bookmarks.index') }}" class="mb-10">
+    {{-- Big, central search — filters instantly as you type, no reload --}}
+    <div class="mb-10">
         <input
             type="text"
-            name="q"
-            value="{{ $query }}"
+            x-model="search"
             placeholder="Search your bookmarks…"
             class="w-full text-2xl sm:text-3xl font-medium text-center bg-transparent border-0 border-b-2 border-gray-200 dark:border-gray-800 focus:border-gray-900 dark:focus:border-gray-100 focus:ring-0 outline-none px-1 py-4 placeholder:text-gray-300 dark:placeholder:text-gray-700 transition-colors"
             autofocus
         >
-    </form>
+    </div>
 
     <div class="flex items-center justify-between mb-6">
         <p class="text-sm text-gray-500 dark:text-gray-400">
-            {{ $bookmarks->count() }} {{ Str::plural('bookmark', $bookmarks->count()) }}
+            <span x-text="visibleCount"></span>
+            <span x-text="visibleCount === 1 ? 'bookmark' : 'bookmarks'"></span>
         </p>
 
         <button
@@ -56,12 +64,16 @@
         </form>
     </div>
 
-    {{-- Grid of cards, random order --}}
+    {{-- Grid of cards. All are rendered; matching search just toggles visibility --}}
     @if ($bookmarks->isEmpty())
         <div class="text-center text-gray-400 dark:text-gray-600 py-20">
-            {{ $query !== '' ? 'No bookmarks match that search.' : 'No bookmarks yet — add your first one above.' }}
+            No bookmarks yet — add your first one above.
         </div>
     @else
+        <div x-show="visibleCount === 0" x-cloak class="text-center text-gray-400 dark:text-gray-600 py-20">
+            No bookmarks match that search.
+        </div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach ($bookmarks as $bookmark)
                 @include('bookmarks._card', ['bookmark' => $bookmark])
