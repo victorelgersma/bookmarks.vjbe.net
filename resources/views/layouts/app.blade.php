@@ -11,7 +11,14 @@
 <body class="h-full bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 antialiased">
     <div class="min-h-full flex flex-col">
         <nav class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-            <a href="{{ route('bookmarks.index') }}" class="font-semibold tracking-tight text-lg">Bookmarks</a>
+            <div class="flex items-center gap-4">
+                <a href="{{ route('bookmarks.index') }}" class="font-semibold tracking-tight text-lg">Bookmarks</a>
+                @auth
+                    <a href="{{ route('tags.index') }}" class="text-sm text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+                        Tags
+                    </a>
+                @endauth
+            </div>
             @auth
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -71,6 +78,35 @@
 
             cards[nextIndex].focus();
         });
+
+        // Alpine component powering the tag-chip input: typing a comma
+        // (or pressing Enter) immediately turns the current draft text
+        // into a chip. This runs as a plain (non-deferred) script, so it
+        // registers on window before Alpine's deferred script boots and
+        // starts evaluating x-data="tagInput(...)" attributes.
+        window.tagInput = function (initialTags) {
+            return {
+                tags: Array.isArray(initialTags) ? initialTags.slice() : [],
+                draft: '',
+                addTag() {
+                    const name = this.draft.trim().replace(/,+$/, '').trim();
+                    this.draft = '';
+                    if (name === '') return;
+                    const lower = name.toLowerCase();
+                    if (!this.tags.some(t => t.toLowerCase() === lower)) {
+                        this.tags.push(name);
+                    }
+                },
+                removeTag(index) {
+                    this.tags.splice(index, 1);
+                },
+                removeLastTag() {
+                    if (this.draft === '' && this.tags.length > 0) {
+                        this.tags.pop();
+                    }
+                },
+            };
+        };
     </script>
 </body>
 </html>

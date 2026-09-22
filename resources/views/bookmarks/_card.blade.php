@@ -1,7 +1,7 @@
 <div
     x-data="{ editing: false, copied: false }"
     data-bookmark-card
-    data-search="{{ Str::lower(($bookmark->name ?: '').' '.$bookmark->displayUrl()) }}"
+    data-search="{{ Str::lower(($bookmark->name ?: '').' '.$bookmark->displayUrl().' '.$bookmark->tags->pluck('name')->implode(' ')) }}"
     x-show="search.trim() === '' || $el.dataset.search.includes(search.trim().toLowerCase())"
     tabindex="0"
     @click="if (!editing) window.location.href = '{{ $bookmark->url }}'"
@@ -48,6 +48,19 @@
             {{ $bookmark->displayUrl() }}
         </p>
 
+        @if ($bookmark->tags->isNotEmpty())
+            <div class="mt-2 flex flex-wrap gap-1.5" @click.stop>
+                @foreach ($bookmark->tags as $tag)
+                    <a
+                        href="{{ route('tags.show', $tag) }}"
+                        class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        {{ $tag->name }}
+                    </a>
+                @endforeach
+            </div>
+        @endif
+
         <p x-show="copied" x-transition x-cloak class="mt-1 text-xs text-green-600 dark:text-green-400">Copied!</p>
     </div>
 
@@ -57,9 +70,33 @@
             @csrf
             @method('PUT')
             <input type="text" name="name" value="{{ $bookmark->name }}" placeholder="Name"
-                class="w-full text-sm rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100">
+                class="w-full px-3 py-2 text-sm rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100">
             <input type="url" name="url" value="{{ $bookmark->url }}" required
-                class="w-full text-sm rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100">
+                class="w-full px-3 py-2 text-sm rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100">
+
+            {{-- Tag chip input, pre-filled with this bookmark's current tags --}}
+            <div
+                x-data="tagInput(@js($bookmark->tags->pluck('name')->all()))"
+                class="flex flex-wrap items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 px-2 py-1.5 focus-within:ring-2 focus-within:ring-gray-900 dark:focus-within:ring-gray-100"
+            >
+                <template x-for="(tag, index) in tags" :key="tag">
+                    <span class="inline-flex items-center gap-1 text-xs pl-2 pr-1 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                        <span x-text="tag"></span>
+                        <button type="button" @click="removeTag(index)" class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-100" aria-label="Remove tag">&times;</button>
+                    </span>
+                </template>
+                <input
+                    type="text"
+                    x-model="draft"
+                    @keydown.enter.prevent="addTag()"
+                    @keydown.comma.prevent="addTag()"
+                    @keydown.backspace="removeLastTag()"
+                    @blur="addTag()"
+                    placeholder="Tags…"
+                    class="flex-1 min-w-[5rem] bg-transparent border-0 p-0 text-sm focus:ring-0 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                >
+                <input type="hidden" name="tags" :value="tags.join(',')">
+            </div>
 
             <div class="flex items-center justify-between pt-1">
                 <button type="button" @click="editing = false" class="text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">

@@ -3,29 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bookmark;
+use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class BookmarkController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = trim((string) $request->query('q', ''));
-
         $bookmarks = $request->user()->bookmarks()
-            ->when($query !== '', function ($builder) use ($query) {
-                $builder->where(function ($sub) use ($query) {
-                    $sub->where('name', 'like', "%{$query}%")
-                        ->orWhere('url', 'like', "%{$query}%");
-                });
-            })
+            ->with('tags')
             ->inRandomOrder()
             ->get();
 
         return view('bookmarks.index', [
             'bookmarks' => $bookmarks,
-            'query' => $query,
         ]);
     }
 
@@ -34,9 +28,15 @@ class BookmarkController extends Controller
         $validated = $request->validate([
             'url' => ['required', 'url', 'max:2048'],
             'name' => ['nullable', 'string', 'max:1000'],
+            'tags' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $request->user()->bookmarks()->create($validated);
+        $bookmark = $request->user()->bookmarks()->create([
+            'url' => $validated['url'],
+            'name' => $validated['name'] ?? null,
+        ]);
+
+        $this->syncTags($request, $bookmark);
 
         return redirect()->route('bookmarks.index')->with('status', 'bookmark-saved');
     }
@@ -48,9 +48,15 @@ class BookmarkController extends Controller
         $validated = $request->validate([
             'url' => ['required', 'url', 'max:2048'],
             'name' => ['nullable', 'string', 'max:1000'],
+            'tags' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $bookmark->update($validated);
+        $bookmark->update([
+            'url' => $validated['url'],
+            'name' => $validated['name'] ?? null,
+        ]);
+
+        $this->syncTags($request, $bookmark);
 
         return redirect()->route('bookmarks.index')->with('status', 'bookmark-updated');
     }
@@ -62,5 +68,26 @@ class BookmarkController extends Controller
         $bookmark->delete();
 
         return redirect()->route('bookmarks.index')->with('status', 'bookmark-deleted');
+    }
+
+    /**
+     * Splits the comma-separated "tags" input into individual tag names,
+     * finds-or-creates each one scoped to the current user, and syncs
+     * them onto the bookmark. Blank/duplicate names are dropped.
+     */
+    private function syncTags(Request $request, Bookmark $bookmark): void
+    {
+        $names = collect(explode(',', (string) $request->input('tags', '')))
+            ->map(fn ($name) => Str::lower(trim($name)))
+            ->filter()
+            ->unique();
+
+        $tagIds = $names->map(
+            fn ($name) => Tag::firstOrCreate(
+                ['user_id' => $request->user()->id, 'name' => $name]
+            )->id
+        );
+
+        $bookmark->tags()->sync($tagIds);
     }
 }

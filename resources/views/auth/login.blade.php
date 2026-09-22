@@ -36,7 +36,7 @@
                     required
                     autofocus
                     autocomplete="username"
-                    class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100"
+                    class="w-full px-3 py-2 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100"
                 >
 
                 @error('email')

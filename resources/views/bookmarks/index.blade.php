@@ -4,7 +4,10 @@
 <div class="max-w-5xl mx-auto px-6 py-10" x-data="{
     formOpen: false,
     search: '',
-    bookmarks: @js($bookmarks->map(fn ($b) => ['id' => $b->id, 'text' => Str::lower(($b->name ?: '').' '.$b->displayUrl())])),
+    bookmarks: @js($bookmarks->map(fn ($b) => [
+        'id' => $b->id,
+        'text' => Str::lower(($b->name ?: '').' '.$b->displayUrl().' '.$b->tags->pluck('name')->implode(' ')),
+    ])),
     get visibleCount() {
         const q = this.search.trim().toLowerCase();
         return this.bookmarks.filter(b => q === '' || b.text.includes(q)).length;
@@ -51,12 +54,41 @@
         <form method="POST" action="{{ route('bookmarks.store') }}" class="grid gap-3 sm:grid-cols-2">
             @csrf
             <input type="url" name="url" placeholder="https://…" value="{{ old('url') }}" required
-                class="rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100">
+                class="px-3 py-2 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100">
             <input type="text" name="name" placeholder="Name (optional)" value="{{ old('name') }}"
-                class="rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100">
+                class="px-3 py-2 rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 focus:ring-gray-900 dark:focus:ring-gray-100">
+
+            {{-- Tag chip input: typing a comma or pressing Enter turns the
+                 current text into a chip immediately; backspace on an empty
+                 field removes the last chip. The hidden input carries the
+                 comma-joined list under the same "tags" name the controller
+                 already parses. --}}
+            <div
+                x-data="tagInput([])"
+                class="sm:col-span-2 flex flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-700 dark:bg-gray-800 px-2 py-1.5 focus-within:ring-2 focus-within:ring-gray-900 dark:focus-within:ring-gray-100"
+            >
+                <template x-for="(tag, index) in tags" :key="tag">
+                    <span class="inline-flex items-center gap-1 text-xs pl-2 pr-1 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                        <span x-text="tag"></span>
+                        <button type="button" @click="removeTag(index)" class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-100" aria-label="Remove tag">&times;</button>
+                    </span>
+                </template>
+                <input
+                    type="text"
+                    x-model="draft"
+                    @keydown.enter.prevent="addTag()"
+                    @keydown.comma.prevent="addTag()"
+                    @keydown.backspace="removeLastTag()"
+                    @blur="addTag()"
+                    placeholder="Tags…"
+                    class="flex-1 min-w-[6rem] bg-transparent border-0 p-0 text-sm focus:ring-0 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-600"
+                >
+                <input type="hidden" name="tags" :value="tags.join(',')">
+            </div>
 
             @error('url')<p class="text-sm text-red-600 sm:col-span-2">{{ $message }}</p>@enderror
             @error('name')<p class="text-sm text-red-600 sm:col-span-2">{{ $message }}</p>@enderror
+            @error('tags')<p class="text-sm text-red-600 sm:col-span-2">{{ $message }}</p>@enderror
 
             <button type="submit" class="sm:col-span-2 justify-self-start px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white transition-colors">
                 Save bookmark
