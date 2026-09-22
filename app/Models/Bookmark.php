@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Link extends Model
+class Bookmark extends Model
 {
     protected $fillable = [
         'user_id',
         'url',
-        'description',
+        'name',
     ];
 
     public function user(): BelongsTo
@@ -20,7 +20,7 @@ class Link extends Model
 
     /**
      * A short, readable version of the URL for display — strips the
-     * scheme and any trailing slash so the list doesn't get cluttered
+     * scheme and any trailing slash so the card doesn't get cluttered
      * with "https://" on every line.
      */
     public function displayUrl(): string

@@ -7,3 +7,9 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Alpine hides elements with x-cloak once it boots; without this rule
+   they'd flash visible for a moment on page load. */
+[x-cloak] {
+    display: none !important;
+}

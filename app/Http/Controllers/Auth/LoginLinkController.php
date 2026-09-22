@@ -58,6 +58,6 @@ class LoginLinkController extends Controller
         Auth::login($user, remember: true);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('links.index', absolute: false));
+        return redirect()->intended(route('bookmarks.index', absolute: false));
     }
 }

@@ -25,8 +25,8 @@ class User extends Authenticatable
         ];
     }
 
-    public function links(): HasMany
+    public function bookmarks(): HasMany
     {
-        return $this->hasMany(Link::class);
+        return $this->hasMany(Bookmark::class);
     }
 }

@@ -1,18 +1,19 @@
 <?php
 
-use App\Http\Controllers\LinkController;
+use App\Http\Controllers\BookmarkController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return auth()->check()
-        ? redirect()->route('links.index')
+        ? redirect()->route('bookmarks.index')
         : redirect()->route('login');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/links', [LinkController::class, 'index'])->name('links.index');
-    Route::post('/links', [LinkController::class, 'store'])->name('links.store');
-    Route::delete('/links/{link}', [LinkController::class, 'destroy'])->name('links.destroy');
+    Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('/bookmarks', [BookmarkController::class, 'store'])->name('bookmarks.store');
+    Route::put('/bookmarks/{bookmark}', [BookmarkController::class, 'update'])->name('bookmarks.update');
+    Route::delete('/bookmarks/{bookmark}', [BookmarkController::class, 'destroy'])->name('bookmarks.destroy');
 });
 
 require __DIR__.'/auth.php';
