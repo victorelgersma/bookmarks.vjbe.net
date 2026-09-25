@@ -22,9 +22,9 @@ class LoginLinkNotification extends Notification
     public function toMail($notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Your Links login link')
+            ->subject('Your '.config('app.name').' login link')
             ->line('Click below to log in. This link expires in 15 minutes and can only be used once.')
-            ->action('Log in to Links', $this->url)
+            ->action('Log in to '.config('app.name'), $this->url)
             ->line("If you didn't request this, you can safely ignore this email.");
     }
 }

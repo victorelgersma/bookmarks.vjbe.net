@@ -4,8 +4,8 @@
     data-search="{{ Str::lower(($bookmark->name ?: '').' '.$bookmark->displayUrl().' '.$bookmark->tags->pluck('name')->implode(' ')) }}"
     x-show="search.trim() === '' || $el.dataset.search.includes(search.trim().toLowerCase())"
     tabindex="0"
-    @click="if (!editing) window.location.href = '{{ $bookmark->url }}'"
-    @keydown.enter="if (!editing) window.location.href = '{{ $bookmark->url }}'"
+    @click="if (!editing) window.open(@js($bookmark->url), '_blank', 'noopener')"
+    @keydown.enter="if (!editing) window.open(@js($bookmark->url), '_blank', 'noopener')"
     class="group relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 cursor-pointer transition-all duration-150 hover:scale-[1.03] hover:shadow-lg hover:z-10 focus:scale-[1.03] focus:shadow-lg focus:z-10 focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-100"
 >
     {{-- View mode --}}
@@ -20,7 +20,7 @@
                 <button
                     type="button"
                     title="Copy URL"
-                    @click="navigator.clipboard.writeText('{{ $bookmark->url }}'); copied = true; setTimeout(() => copied = false, 1200)"
+                    @click="navigator.clipboard.writeText(@js($bookmark->url)); copied = true; setTimeout(() => copied = false, 1200)"
                     class="p-1.5 rounded-md text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
